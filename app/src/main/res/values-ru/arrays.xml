@@ -11,7 +11,7 @@
     <string-array name="bcn_emulation_entries">
         <item>нет</item>
         <item>частично</item>
-        <item>полно</item>
+        <item>полная</item>
         <item>авто</item>
     </string-array>
     <string-array name="bcn_emulation_type_entries">
@@ -230,6 +230,7 @@
     <string-array name="wowbox64_version_entries">
         <item>0.4.0</item>
         <item>0.3.7</item>
+        <item>0.3.6</item>
         <item>0.3.4</item>
     </string-array>
     <string-array name="wrapper_graphics_driver_version_entries">
