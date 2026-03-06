@@ -48,6 +48,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import app.gamenative.R
+import app.gamenative.ui.util.SnackbarManager
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -62,6 +63,8 @@ import app.gamenative.data.LibraryItem
 import app.gamenative.data.SteamApp
 import app.gamenative.events.AndroidEvent
 import app.gamenative.events.SteamEvent
+import app.gamenative.ui.enums.Orientation
+import java.util.EnumSet
 import app.gamenative.externaldisplay.ExternalDisplayInputController
 import app.gamenative.externaldisplay.ExternalDisplaySwapController
 import app.gamenative.externaldisplay.SwapInputOverlayView
@@ -239,9 +242,6 @@ fun XServerScreen(
 
     // PluviaApp.events.emit(AndroidEvent.SetAppBarVisibility(false))
     PluviaApp.events.emit(AndroidEvent.SetSystemUIVisibility(false))
-    PluviaApp.events.emit(
-        AndroidEvent.SetAllowedOrientation(PrefManager.allowedOrientation),
-    )
 
     // seems to be used to indicate when a custom wine is being installed (intent extra "generate_wineprefix")
     // val generateWinePrefix = false
@@ -257,6 +257,13 @@ fun XServerScreen(
     val container = remember(appId) {
         ContainerUtils.getContainer(context, appId)
     }
+
+    PluviaApp.events.emit(
+        AndroidEvent.SetAllowedOrientation(
+            if (container.isPortraitMode) EnumSet.of(Orientation.PORTRAIT)
+            else PrefManager.allowedOrientation,
+        ),
+    )
 
     val xServerState = rememberSaveable(stateSaver = XServerState.Saver) {
         mutableStateOf(
@@ -700,7 +707,7 @@ fun XServerScreen(
         }
     }
 
-    val isPortrait = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
+    val isPortrait = container.isPortraitMode
     // var launchedView by rememberSaveable { mutableStateOf(false) }
     Box(modifier = Modifier.fillMaxSize()) {
         key(isPortrait) {
@@ -730,9 +737,9 @@ fun XServerScreen(
             },
         factory = { context ->
             Timber.i("Creating XServerView and XServer")
-            val isPortrait = context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
             val dm = context.resources.displayMetrics
-            val controlsHeightPortrait = dm.widthPixels * 9 / 16
+            val screenWidth = if (isPortrait) minOf(dm.widthPixels, dm.heightPixels) else dm.widthPixels
+            val controlsHeightPortrait = screenWidth * 9 / 16
             val mainRoot = if (isPortrait) {
                 LinearLayout(context).apply {
                     orientation = LinearLayout.VERTICAL
@@ -1346,7 +1353,7 @@ fun XServerScreen(
                                 }
 
                                 icView.invalidate()
-                                android.widget.Toast.makeText(context, context.getString(R.string.toast_controls_reset), android.widget.Toast.LENGTH_SHORT).show()
+                                SnackbarManager.show(context.getString(R.string.toast_controls_reset))
                             }
                         }
                     }
